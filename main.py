@@ -156,21 +156,20 @@ async def on_startup(bot: Bot):
     if settings.webhook_host:
         await bot.set_webhook(
             url=settings.bot_webhook_url,
-            drop_pending_updates=True,
+            allowed_updates=["message", "callback_query"],
+            drop_pending_updates=False,
         )
-        logger.info(f"✅ Webhook: {settings.bot_webhook_url}")
-    else:
-        logger.info("✅ Polling mode")
+        info = await bot.get_webhook_info()
+        logger.info(f"✅ Webhook set: {info.url}")
+        if info.last_error_message:
+            logger.error(f"⚠️ Webhook error: {info.last_error_message}")
 
 
 async def on_shutdown(bot: Bot):
     from monitoring.scheduler import stop_scheduler
     stop_scheduler()
-
-    if settings.webhook_host:
-        await bot.delete_webhook()
-    logger.info("🔴 Bot stopped")
-
+    # НЕ удаляем webhook при shutdown — Railway перезапускает часто
+    logger.info("🔴 Bot stopped (webhook kept)")
 
 def create_bot_and_dp() -> tuple[Bot, Dispatcher]:
     bot = Bot(
@@ -246,4 +245,5 @@ if __name__ == "__main__":
     if settings.webhook_host:
         run_webhook()
     else:
+
         asyncio.run(run_polling())
