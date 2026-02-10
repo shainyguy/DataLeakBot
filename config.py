@@ -1,13 +1,11 @@
 from pydantic_settings import BaseSettings
-from pydantic import field_validator
-from typing import List
 import os
 
 
 class Settings(BaseSettings):
     # Telegram
     bot_token: str
-    admin_ids: List[int] = []
+    admin_ids_raw: str = ""  # принимаем как строку
 
     # Database
     database_url: str = "sqlite+aiosqlite:///dataleakbot.db"
@@ -35,18 +33,21 @@ class Settings(BaseSettings):
     # Free tier limits
     free_checks_per_day: int = 1
 
-    @field_validator("admin_ids", mode="before")
-    @classmethod
-    def parse_admin_ids(cls, v):
-        if isinstance(v, str):
-            return [int(x.strip()) for x in v.split(",") if x.strip()]
-        if isinstance(v, int):
-            return [v]
-        return v
-
     class Config:
         env_file = ".env"
         env_file_encoding = "utf-8"
+
+    @property
+    def admin_ids(self) -> list[int]:
+        """Парсит ADMIN_IDS_RAW в список int"""
+        raw = self.admin_ids_raw.strip()
+        if not raw:
+            return []
+        result = []
+        for part in raw.replace(" ", "").split(","):
+            if part.isdigit():
+                result.append(int(part))
+        return result
 
     @property
     def webhook_url(self) -> str:
