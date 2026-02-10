@@ -1,0 +1,1 @@
+from bot.middlewares.throttling import ThrottlingMiddleware, DatabaseMiddleware

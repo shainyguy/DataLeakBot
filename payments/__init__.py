@@ -1,0 +1,1 @@
+from payments.yookassa_pay import YooKassaService, PLAN_DETAILS
