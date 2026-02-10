@@ -1,4 +1,5 @@
 from pydantic_settings import BaseSettings
+from pydantic import field_validator
 from typing import List
 import os
 
@@ -27,12 +28,21 @@ class Settings(BaseSettings):
     webhook_path: str = "/yookassa/webhook"
     bot_webhook_path: str = "/bot/webhook"
 
-    # Subscription prices (в рублях)
+    # Subscription prices
     premium_price: int = 790
     business_price: int = 1790
 
     # Free tier limits
     free_checks_per_day: int = 1
+
+    @field_validator("admin_ids", mode="before")
+    @classmethod
+    def parse_admin_ids(cls, v):
+        if isinstance(v, str):
+            return [int(x.strip()) for x in v.split(",") if x.strip()]
+        if isinstance(v, int):
+            return [v]
+        return v
 
     class Config:
         env_file = ".env"
